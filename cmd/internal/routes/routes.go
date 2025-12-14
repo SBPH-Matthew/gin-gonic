@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/SBPH-Matthew/gin-gonic-be/cmd/internal/handlers"
+	"github.com/SBPH-Matthew/gin-gonic-be/cmd/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,12 @@ func RegisterRoutes(r *gin.Engine) {
 		})
 	})
 
+	r.GET("/me", middleware.AuthRequired(), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"messages": "Hello User",
+		})
+	})
+
 	api := r.Group("/api")
 	{
 		api.GET("/users", handlers.GetUsers)
@@ -21,4 +28,5 @@ func RegisterRoutes(r *gin.Engine) {
 		api.POST("/register", handlers.Register)
 		api.POST("/login", handlers.Login)
 	}
+
 }
