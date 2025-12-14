@@ -19,5 +19,6 @@ func RegisterRoutes(r *gin.Engine) {
 		api.GET("/users", handlers.GetUsers)
 		api.POST("/user/create", handlers.CreateUser)
 		api.POST("/register", handlers.Register)
+		api.POST("/login", handlers.Login)
 	}
 }
