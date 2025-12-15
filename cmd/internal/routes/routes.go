@@ -15,18 +15,13 @@ func RegisterRoutes(r *gin.Engine) {
 		})
 	})
 
-	r.GET("/me", middleware.AuthRequired(), func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"messages": "Hello User",
-		})
-	})
-
 	api := r.Group("/api")
 	{
 		api.GET("/users", handlers.GetUsers)
 		api.POST("/user/create", handlers.CreateUser)
 		api.POST("/register", handlers.Register)
 		api.POST("/login", handlers.Login)
+		api.GET("/me", middleware.AuthRequired(), handlers.Profile)
 	}
 
 }
