@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,17 +19,14 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		tokenString := authHeader
-		if strings.HasPrefix(strings.ToLower(tokenString), "bearer ") {
-			tokenString = strings.TrimSpace(tokenString[7:])
-		}
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			secret = "dev-secret-key"
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			return []byte(secret), nil
 		})
 
@@ -38,9 +36,24 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-		c.Set("user_id", claims["user_id"])
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token Claims"})
+			c.Abort()
+			return
+		}
 
+		if exp, ok := claims["exp"].(float64); ok {
+			expirationTime := time.Unix(int64(exp), 0)
+
+			if time.Now().After(expirationTime) {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
+				c.Abort()
+				return
+			}
+		}
+
+		c.Set("user_id", claims["user_id"])
 		c.Next()
 	}
 }
